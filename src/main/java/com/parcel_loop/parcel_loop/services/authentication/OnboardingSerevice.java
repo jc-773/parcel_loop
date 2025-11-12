@@ -1,8 +1,21 @@
 package com.parcel_loop.parcel_loop.services.authentication;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.parcel_loop.parcel_loop.models.AddressKeyFormat;
 import com.parcel_loop.parcel_loop.models.ShipperProfile;
 import com.parcel_loop.parcel_loop.models.request_objects.ups.XavRequest;
+import com.parcel_loop.parcel_loop.models.response_objects.usps.AddressValidateResponse;
+import com.parcel_loop.parcel_loop.services.external.usps.UspsExternalServices;
 
 /*
  * 
@@ -34,46 +47,33 @@ import com.parcel_loop.parcel_loop.models.request_objects.ups.XavRequest;
             Attach the shipper info to the authenticated user’s record.
 
  */
-
+@Service
 public class OnboardingSerevice {
-    
-    public boolean isAddressValid(ShipperProfile shipperProfile) {
-        /*
-            {
-                "XAVRequest": {
-                    "AddressKeyFormat": 
-                        {
-                            "ConsigneeName": "RITZ CAMERA CENTERS-1749", ✅
-                            "BuildingName": "Innoplex", ✅
-                            "AddressLine": [],✅
-                            "Region": "ROSWELL,GA,30076-1521", ✅
-                            "PoliticalDivision2": "ALISO VIEJO", ✅
-                            "PoliticalDivision1": "CA", ✅
-                            "PostcodePrimaryLow": "92656",
-                            "PostcodeExtendedLow": "1521",
-                            "Urbanization": "porto arundal",
-                            "CountryCode": "US" ✅
-                        }
-                }
 
-                make API request to UPS to /verify to validate address
-        */
-        var xavReq = buildVerifyAddressRequest_UPS(shipperProfile);
-        //pass the xavReq to /verify API
-        //UPS' response will be held in a field named 'ValidAddressIndicator' Y or N
-        //var response = ??
+    private UspsExternalServices uspsExternal;
 
+    @Autowired
+    public OnboardingSerevice(UspsExternalServices uspsExternal) {
+        this.uspsExternal = uspsExternal;
     }
 
-    private XavRequest buildVerifyAddressRequest_UPS(ShipperProfile shipperProfile) {
+    public AddressValidateResponse isAddressValid(ShipperProfile shipperProfile) {
+        var xavReq = buildXavRequest_UPS(shipperProfile);
+        var response = uspsExternal.verifyAddressUsps(xavReq.getAddressKeyFormat());
+
+        var addressResponse = parseJsonToAddressValidationResponse(response);
+        return addressResponse;
+    }
+
+    private XavRequest buildXavRequest_UPS(ShipperProfile shipperProfile) {
         XavRequest verifyAddressRequest = new XavRequest();
         AddressKeyFormat addressKeyFormat = new AddressKeyFormat();
         verifyAddressRequest.setAddressKeyFormat(addressKeyFormat);
-        addressKeyFormat.setAddressLine(shipperProfile.getStreetAddressOne()); 
+        addressKeyFormat.setAddressLine(shipperProfile.getStreetAddressOne());
         addressKeyFormat.setPoliticalDivisionOne(shipperProfile.getState());
         addressKeyFormat.setPoliticalDivisionTwo(shipperProfile.getCity());
         addressKeyFormat.setPostCodePrimaryLow(shipperProfile.getZip());
-        addressKeyFormat.setCountryCode(shipperProfile.getCountry());
+        // addressKeyFormat.setCountryCode(shipperProfile.getCountry());
         return verifyAddressRequest;
     }
 
@@ -81,6 +81,17 @@ public class OnboardingSerevice {
         StringBuilder sb = new StringBuilder();
         sb.append(shipperProfile.getCity()).append(shipperProfile.getState()).append(shipperProfile.getZip());
         return sb.toString();
+    }
+
+    private AddressValidateResponse parseJsonToAddressValidationResponse(ResponseEntity<String> response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        AddressValidateResponse addressResponse = new AddressValidateResponse();
+        try {
+                addressResponse = objectMapper.readValue(response.getBody(), AddressValidateResponse.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return addressResponse;
     }
 
 }

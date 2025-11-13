@@ -1,5 +1,6 @@
 package com.parcel_loop.parcel_loop.models.response_objects.authentication;
 
+//TODO: Class name SuccessfullAuth
 public class SignUpAuthResponse {
     private String message;
     private String jwt;
@@ -8,7 +9,7 @@ public class SignUpAuthResponse {
         this.message = message;
         this.jwt = jwt;
     }
-    
+
     public String getMessage() {
         return message;
     }

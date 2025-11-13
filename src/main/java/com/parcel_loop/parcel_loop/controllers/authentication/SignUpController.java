@@ -33,7 +33,7 @@ public class SignUpController {
         this.userAuthRepo = userAuthRepo;
         this.jwtUtility = jwtUtility;
     }
-    //TODO: Document how Postman was returning a 403 because the filterchain method in your securityConfig class didn't whitelist the /auth/signup path
+    //TODO: Document how Postman was returning a 403 because the filterchain method in your securityConfig class didn't whitelist the /auth/signup path. And explain why!
     @PostMapping("/auth/signup")
     public ResponseEntity<SignUpAuthResponse> userSignUp(@RequestBody UserAuth user) {
         String requestEmail = user.getEmail();

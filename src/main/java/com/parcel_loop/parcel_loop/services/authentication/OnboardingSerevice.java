@@ -57,10 +57,9 @@ public class OnboardingSerevice {
         this.uspsExternal = uspsExternal;
     }
 
-    public AddressValidateResponse isAddressValid(ShipperProfile shipperProfile) {
+    public AddressValidateResponse isAddressValid(ShipperProfile shipperProfile, String jwtToken) {
         var xavReq = buildXavRequest_UPS(shipperProfile);
-        var response = uspsExternal.verifyAddressUsps(xavReq.getAddressKeyFormat());
-
+        var response = uspsExternal.verifyAddressUsps(xavReq.getAddressKeyFormat(), jwtToken);
         var addressResponse = parseJsonToAddressValidationResponse(response);
         return addressResponse;
     }
@@ -84,14 +83,13 @@ public class OnboardingSerevice {
     }
 
     private AddressValidateResponse parseJsonToAddressValidationResponse(ResponseEntity<String> response) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        AddressValidateResponse addressResponse = new AddressValidateResponse();
         try {
-                addressResponse = objectMapper.readValue(response.getBody(), AddressValidateResponse.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            ObjectMapper objectMapper = new ObjectMapper();
+            String cleanJson = response.getBody().trim();
+            return objectMapper.readValue(cleanJson, AddressValidateResponse.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse USPS JSON response", e);
         }
-        return addressResponse;
     }
 
 }

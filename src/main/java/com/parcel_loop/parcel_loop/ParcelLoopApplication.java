@@ -1,5 +1,6 @@
 package com.parcel_loop.parcel_loop;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -17,4 +18,11 @@ public class ParcelLoopApplication {
 		SpringApplication.run(ParcelLoopApplication.class, args);
 	}
 
+	// @Bean
+	// public CommandLineRunner runJob(CronJobMockEnv cronJobMockEnv) {
+	// 	return args -> {
+	// 		cronJobMockEnv.injectUserWithReturns();
+	// 		System.exit(0);
+	// 	};
+	// }
 }

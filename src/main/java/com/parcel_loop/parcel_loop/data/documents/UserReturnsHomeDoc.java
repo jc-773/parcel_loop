@@ -10,6 +10,10 @@ import com.parcel_loop.parcel_loop.models.response_objects.experience.Returns;
 public class UserReturnsHomeDoc {
     private String email;
     private List<Returns> returns;
+
+    public UserReturnsHomeDoc(String email) {
+        this.email = email;
+    }
     public String getEmail() {
         return email;
     }

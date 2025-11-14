@@ -18,8 +18,8 @@ import com.nimbusds.jose.crypto.MACVerifier;
 
 @Service
 public class JwtUtility {
-     private final String SECRET = generateKey();
-    private static final long EXPIRATION_MS = 9000_00; // 15 min
+    private final String SECRET = generateKey();
+    private static final long EXPIRATION_MS = 9000_00; // I'm setting a 15 min expiration for jwt tokens
 
     public String generateToken(String email) {
         long now = System.currentTimeMillis();
@@ -32,8 +32,7 @@ public class JwtUtility {
 
         JWSObject jws = new JWSObject(
                 new JWSHeader(JWSAlgorithm.HS256),
-                new Payload(claims)
-        );
+                new Payload(claims));
 
         try {
             jws.sign(new MACSigner(SECRET));
@@ -55,8 +54,7 @@ public class JwtUtility {
 
         JWSObject jws = new JWSObject(
                 new JWSHeader(JWSAlgorithm.HS256),
-                new Payload(claims)
-        );
+                new Payload(claims));
 
         try {
             jws.sign(new MACSigner(SECRET));
@@ -70,19 +68,19 @@ public class JwtUtility {
     public String validateAndGetSubject(String token) {
         try {
             JWSObject jws = JWSObject.parse(token);
-        boolean verified = jws.verify(new MACVerifier(SECRET));
-        if (!verified) {
-            throw new Exception("Invalid signature");
-        }
+            boolean verified = jws.verify(new MACVerifier(SECRET));
+            if (!verified) {
+                throw new Exception("Invalid signature");
+            }
 
-        Map<String, Object> claims = jws.getPayload().toJSONObject();
-        long exp = (long) claims.get("exp");
-        long now = System.currentTimeMillis() / 1000;
-        if (now > exp) {
-            throw new Exception("Token expired");
-        }
+            Map<String, Object> claims = jws.getPayload().toJSONObject();
+            long exp = (long) claims.get("exp");
+            long now = System.currentTimeMillis() / 1000;
+            if (now > exp) {
+                throw new Exception("Token expired");
+            }
 
-        return (String) claims.get("sub");
+            return (String) claims.get("sub");
         } catch (Exception e) {
             // TODO: handle exception
         }
